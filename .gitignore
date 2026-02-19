@@ -1,0 +1,6 @@
+*.csv
+*.txt
+*.pyc
+*.xlsx
+*.xlsm
+*.parquet

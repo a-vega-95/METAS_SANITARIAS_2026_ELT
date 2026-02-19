@@ -1,8 +1,18 @@
-*.csv
-*.txt
-*.pyc
-*.xlsx
-*.xlsm
-*.parquet
-*.pdf
-*.log
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Data (Keep structure via .gitkeep, ignore content)
+DATOS/ENTRADA/**/*.xlsx
+DATOS/ENTRADA/**/*.xlsm
+DATOS/ENTRADA/**/*.xls
+DATOS/PIV/*.parquet
+DATOS/PIV/*.csv
+DATOS/RENDIMIENTO/*.xlsx
+DATOS/*.csv
+
+# OS
+.DS_Store
+Thumbs.db

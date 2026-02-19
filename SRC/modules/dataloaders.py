@@ -71,6 +71,11 @@ def scan_rem_files(root_dir):
                 # Check formatting of code (filename without extension)
                 code = os.path.splitext(filename)[0].upper()
                 
+                # Normalize: 121305A -> 121305
+                # This ensures consistent matching with PIV.
+                if code and code[-1].isalpha() and code[:-1].isdigit():
+                    code = code[:-1]
+                
                 mapping.append({
                     'path': full_path,
                     'year': year,

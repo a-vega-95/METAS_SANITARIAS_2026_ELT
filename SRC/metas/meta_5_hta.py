@@ -11,32 +11,37 @@ sys.path.append(os.path.join(project_root, 'SRC'))
 
 from modules.dataloaders import scan_rem_files, load_piv_data
 from modules.utils import normalize_path
+from config import (
+    DIR_SERIE_P_ACTUAL, 
+    PIV_FILE, 
+    PREVALENCIA_HTA_15_24, 
+    PREVALENCIA_HTA_25_44, 
+    PREVALENCIA_HTA_45_64, 
+    PREVALENCIA_HTA_65_MAS,
+    AGNO_ACTUAL
+)
 
 def calcular_meta_5():
     print("=== Calculando Meta 5: Hipertensión Arterial (HTA) ===")
     
-    # Configuración
-    DATA_DIR = r"DATOS\ENTRADA\SERIE_P"
-    PIV_FILE = r"DATOS\PIV\PIV_MASTER_GOLD_2025_09_ACEPTADOS.parquet"
-    
-    # Meta 5: Cobertura Efectiva HTA (P04 Sección B)
+    # Meta 5: Cobertura Efectiva HTA (P4 Sección B)
     # Num: C34 + C35 (Personas 15-79 <140/90 + 80+ <150/90)
-    SHEET = "P04"
+    SHEET = "P4"
     CELLS = ["C34", "C35"]
     
     try:
-        mapping = scan_rem_files(DATA_DIR)
+        mapping = scan_rem_files(DIR_SERIE_P_ACTUAL)
         piv_data = load_piv_data(PIV_FILE)
     except Exception as e:
         print(e)
         return
 
-    # 1. Denominadores (Estimados con Factores de Riesgo)
-    # Factores:
-    # 15-24: 1.8% (0.018)
-    # 25-44: 6.3% (0.063)
-    # 45-64: 18.3% (0.183)
-    # 65+:   30.6% (0.306)
+    # 1. Denominadores Estimados (PIV Estratificado)
+    # Res. Exenta 650:
+    # 15-24: 0.7%
+    # 25-44: 10.6%
+    # 45-64: 45.1%
+    # 65+:   73.3%
     
     denominadores = {}
     
@@ -48,29 +53,28 @@ def calcular_meta_5():
         
         if estado == 'ACEPTADO':
             if centro not in denominadores:
-                denominadores[centro] = 0.0
-                
+                denominadores[centro] = 0
+            
             factor = 0.0
             if 15 <= edad <= 24:
-                factor = 0.018
+                factor = PREVALENCIA_HTA_15_24
             elif 25 <= edad <= 44:
-                factor = 0.063
+                factor = PREVALENCIA_HTA_25_44
             elif 45 <= edad <= 64:
-                factor = 0.183
+                factor = PREVALENCIA_HTA_45_64
             elif edad >= 65:
-                factor = 0.306
+                factor = PREVALENCIA_HTA_65_MAS
                 
-            denominadores[centro] += factor
-            
+            if factor > 0:
+                denominadores[centro] += (1 * factor)
+                
     # Redondear denominadores
     denominadores = {k: round(v) for k, v in denominadores.items()}
     
-    # 2. Numeradores (REM P04)
+    # 2. Numeradores (REM)
     numeradores = {}
     
     for entry in mapping:
-        # Code from filename
-        # PIV returns codes like '121305', REM often '121305P' or '121305A'
         # Normalize to base code
         raw_code = entry['code']
         # Try to strip trailing letters if numeric part exists
@@ -89,10 +93,26 @@ def calcular_meta_5():
             wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
             if SHEET in wb.sheetnames:
                 sheet = wb[SHEET]
-                for cell in CELLS:
-                    val = sheet[cell].value
-                    if val and isinstance(val, (int, float)):
-                        numeradores[real_code] += val
+                # Dynamic Search for C34+C35 equivalents
+                # "PA < 140/90 mmHg" (usually Row 28/29)
+                # "PA < 150/90 mmHg"
+                
+                rows_found = 0
+                for row in sheet.iter_rows(min_row=1, max_row=100, values_only=True):
+                    row_str = " ".join([str(c) for c in row[:5] if c])
+                    
+                    if "PA < 140/90" in row_str or "PA < 150/90" in row_str:
+                        # Value usually in Col C (Index 2)
+                        if len(row) > 2 and isinstance(row[2], (int, float)):
+                            numeradores[real_code] += row[2]
+                            rows_found += 1
+                            
+                    # Optimization: break if we found both?
+                    # Careful if there are duplicates (e.g. by age group breakdown rows).
+                    # But the "Total" rows are usually unique in the "Metas de Compensación" section.
+                    # We continue scanning to be safe or break if we are sure.
+                    # Given the dump, they appear sequentially.
+                    
             wb.close()
         except: pass
 

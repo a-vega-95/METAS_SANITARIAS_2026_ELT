@@ -144,12 +144,15 @@ def consolidar_reportes():
         ws = wb.active
         ws.title = "Consolidado"
         
-        headers = ['Meta_ID', 'Nombre_Indicador', 'COD_CENTRO', 'Nombre_Centro', 'Numerador_Actual', 'Denominador_Actual', 
+        headers = ['Fecha_Corte', 'Meta_ID', 'Nombre_Indicador', 'COD_CENTRO', 'Nombre_Centro', 'Numerador_Actual', 'Denominador_Actual', 
                    'Cumplimiento_Actual_%', 'Meta_Fijada_%', 'Meta_Nacional_%', 'Brecha_vs_Fijada_%', 
                    'Brecha_vs_Nacional_%', 'Casos_Faltantes_Meta_Fijada', 'Estado']
         ws.append(headers)
         
+        fecha_corte = datetime.now().strftime("%Y-%m-%d")
+        
         for item in consolidado:
+            item['Fecha_Corte'] = fecha_corte
             ws.append([item.get(h, '') for h in headers])
             
         print(f"Archivo generado: {path_excel}")

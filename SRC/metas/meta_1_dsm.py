@@ -10,12 +10,12 @@ sys.path.append(os.path.join(project_root, 'SRC'))
 
 from modules.dataloaders import scan_rem_files, get_rem_value
 from modules.utils import normalize_path
+from config import DIR_SERIE_A_ACTUAL, DIR_SERIE_A_ANTERIOR, AGNO_ACTUAL, AGNO_ANTERIOR
 
 def calcular_meta_1():
     print("=== Calculando Meta 1: Recuperación del Desarrollo Psicomotor ===")
     
     # 1. Configuración
-    DATA_DIR = r"DATOS\ENTRADA\SERIE_A"
     TARGET_SHEET = "A03"
     
     # Coordenadas según LOGICA_NEGOCIO.txt
@@ -25,8 +25,10 @@ def calcular_meta_1():
     
     # 2. Cargar Mapeo (Escaneo de Archivos)
     try:
-        mapping = scan_rem_files(DATA_DIR)
-        print(f"Se encontraron {len(mapping)} archivos REM en {DATA_DIR}.")
+        mapping_actual = scan_rem_files(DIR_SERIE_A_ACTUAL)
+        mapping_anterior = scan_rem_files(DIR_SERIE_A_ANTERIOR)
+        mapping = mapping_actual + mapping_anterior
+        print(f"Se encontraron {len(mapping)} archivos REM en total.")
     except Exception as e:
         print(f"Error fatal escaneando archivos: {e}")
         return
@@ -113,10 +115,13 @@ def calcular_meta_1():
         
         reporte.append({
             'Centro': code,
-            'Periodo': '2026',
+            'Meta_ID': 'Meta 1',
+            'Indicador': 'DSM',
             'Numerador': num,
             'Denominador': den,
-            'Cumplimiento': cumplimiento
+            'Cumplimiento': cumplimiento,
+            'Meta_Fijada': 90.0,
+            'Meta_Nacional': 90.0
         })
 
     # 4. Resultado Final Global
@@ -133,7 +138,7 @@ def calcular_meta_1():
     
     try:
         with open(output_path, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=['Centro', 'Periodo', 'Numerador', 'Denominador', 'Cumplimiento'])
+            writer = csv.DictWriter(f, fieldnames=['Centro', 'Meta_ID', 'Indicador', 'Numerador', 'Denominador', 'Cumplimiento', 'Meta_Fijada', 'Meta_Nacional'])
             writer.writeheader()
             writer.writerows(reporte)
         print(f"Reporte detallado guardado en: {output_path}")

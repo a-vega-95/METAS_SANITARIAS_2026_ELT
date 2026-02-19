@@ -2,7 +2,6 @@ import sys
 import os
 import csv
 import openpyxl
-import pyarrow.parquet as pq
 
 # Add project root to path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -11,155 +10,157 @@ sys.path.append(os.path.join(project_root, 'SRC'))
 
 from modules.dataloaders import scan_rem_files, load_piv_data
 from modules.utils import normalize_path
+from config import DIR_SERIE_A_ACTUAL, PIV_FILE
 
 def calcular_meta_3():
     print("=== Calculando Meta 3: Salud Bucal ===")
     
     # 1. Configuración
-    DATA_DIR = r"DATOS\ENTRADA\SERIE_A"
-    PIV_FILE = r"DATOS\PIV\PIV_MASTER_GOLD_2025_09_ACEPTADOS.parquet"
+    DATA_DIR_A = DIR_SERIE_A_ACTUAL
     
     # Meta 3A: CERO (0-9 años)
-    # Num: REM A03, Sección D.7.
-    # Den: PIV 0-9 años.
-    
+    # Num: REM A03, Sección D.7. "Pauta CERO" -> Fila "TOTAL" -> Suma Col 5 a 24 (0 a 9 años)
     SHEET_3A = "A03"
-    # Placeholder cells for 3A numerator (need valid cells from user or logica)
-    # Assuming D7 section total involves specific cells.
-    # I'll use a placeholder variable or empty list if unknown, but better to try.
-    # LOGICA doesn't specify cells.
-    CELLS_3A = [] # Placeholder
+    COLS_IDX_3A = range(5, 25) # 5 to 24 inclusive (<1 to 9 years, M+F)
     
-    # Meta 3B: Caries (6 años)
-    # Num: REM A09, Sección C. S48 + T48.
+    # Meta 3B: Libre de Caries (6 años)
+    # Num: REM A09, Sección C. S48 + T48
     SHEET_3B = "A09"
     CELLS_3B = ["S48", "T48"]
     
-    # 2. Cargar Datos
     try:
-        mapping = scan_rem_files(DATA_DIR)
+        mapping_a = scan_rem_files(DATA_DIR_A)
         piv_data = load_piv_data(PIV_FILE)
-        print(f"Cargados {len(mapping)} archivos REM y {len(piv_data)} registros PIV.")
     except Exception as e:
-        print(f"Error fatal cargando datos: {e}")
+        print(f"Error cargando datos: {e}")
         return
 
-    # 3. Procesar Denominadores (PIV)
-    # Agrupar por Centro
-    denominadores = {} # {cod_centro: {'3A': count, '3B': count}}
+    # 1. Denominadores (PIV)
+    den_3a = {} # 0-9 años
+    den_3b = {} # 6 años
     
     for row in piv_data:
         centro = row.get('COD_CENTRO', '')
         edad = row.get('EDAD_EN_FECHA_CORTE')
+        # Handle None
         if edad is None: edad = -1
+        
         estado = row.get('ACEPTADO_RECHAZADO', '')
         
-        if estado != 'ACEPTADO':
-            continue
-            
-        if centro not in denominadores:
-            denominadores[centro] = {'3A': 0, '3B': 0}
-            
-        # 3A: 0-9 años
-        if 0 <= edad <= 9:
-            denominadores[centro]['3A'] += 1
-            
-        # 3B: 6 años
-        if edad == 6:
-            denominadores[centro]['3B'] += 1
-
-    # 4. Procesar Numeradores (REM)
-    reporte = []
+        if estado == 'ACEPTADO':
+            if centro not in den_3a:
+                den_3a[centro] = 0
+                den_3b[centro] = 0
+                
+            # Meta 3A: 0 a 9 años
+            if 0 <= edad <= 9:
+                den_3a[centro] += 1
+                
+            # Meta 3B: 6 años
+            if edad == 6:
+                den_3b[centro] += 1
+                
+    # 2. Numeradores (REM)
+    num_3a = {}
+    num_3b = {}
     
-    numeradores = {} # {cod_centro: {'3A': 0, '3B': 0}}
-    
-    for entry in mapping:
-        raw_code = entry['code']
+    for entry in mapping_a:
+        code = entry['code']
         # Normalize code
-        real_code = raw_code
-        if raw_code[-1].isalpha() and raw_code[:-1].isdigit():
-             real_code = raw_code[:-1]
+        real_code = code
+        if code[-1].isalpha() and code[:-1].isdigit():
+             real_code = code[:-1]
              
         file_path = entry['path']
+        year = entry['year']
         
-        if real_code not in numeradores:
-            numeradores[real_code] = {'3A': 0, '3B': 0}
+        # Filtro Año: Numerador 2026
+        if year != 2026: continue
             
-        if not os.path.exists(file_path):
-            continue
+        if real_code not in num_3a:
+            num_3a[real_code] = 0
+            num_3b[real_code] = 0
             
+        if not os.path.exists(file_path): continue
+        
         try:
              wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
              
-             # 3B Numerator (A09 S48+T48)
+             # Meta 3A (A03)
+             if SHEET_3A in wb.sheetnames:
+                 ws = wb[SHEET_3A]
+                 # Find Section D.7 / Pauta CERO
+                 target_row = None
+                 found_section = False
+                 for i, row in enumerate(ws.iter_rows(min_row=1, max_row=300, values_only=True), 1):
+                     content = " ".join([str(c) for c in row[:5] if c])
+                     if "PAUTA CERO" in content:
+                         found_section = True
+                         continue # Look for TOTAL in next rows
+                     
+                     if found_section and "TOTAL" in content:
+                         target_row = row
+                         break
+                     
+                     # Safety break/Reset if we go too far (e.g. next section)
+                     # Assuming TOTAL is close (within 10 rows)
+                 
+                 if target_row:
+                     val_3a = 0
+                     for idx in COLS_IDX_3A:
+                         if idx < len(target_row):
+                             v = target_row[idx]
+                             if v and isinstance(v, (int, float)):
+                                 val_3a += v
+                     num_3a[real_code] += val_3a
+                     
+             # Meta 3B (A09)
              if SHEET_3B in wb.sheetnames:
-                 sheet = wb[SHEET_3B]
+                 ws = wb[SHEET_3B]
+                 val_3b = 0
                  for cell in CELLS_3B:
-                     val = sheet[cell].value
-                     if val and isinstance(val, (int, float)):
-                         numeradores[real_code]['3B'] += val
-                         
-             # 3A Numerator (A03 D.7?)
-             if SHEET_3A in wb.sheetnames and CELLS_3A:
-                 sheet = wb[SHEET_3A]
-                 for cell in CELLS_3A:
-                     val = sheet[cell].value
-                     if val and isinstance(val, (int, float)):
-                         numeradores[real_code]['3A'] += val
-             
+                     v = ws[cell].value
+                     if v and isinstance(v, (int, float)):
+                         val_3b += v
+                 num_3b[real_code] += val_3b
+                 
              wb.close()
-        except:
-             pass
+        except: pass
 
-    # 5. Generar Reporte Combinado
-    all_centers = set(denominadores.keys()) | set(numeradores.keys())
+    # Reporte
+    all_centers = set(den_3a.keys()) | set(num_3a.keys())
+    reporte = []
     
-    for code in all_centers:
-        den = denominadores.get(code, {'3A': 0, '3B': 0})
-        num = numeradores.get(code, {'3A': 0, '3B': 0})
-        
-        # 3A Report
-        den_3a = den['3A']
-        num_3a = num['3A']
-        cump_3a = (num_3a / den_3a * 100) if den_3a > 0 else 0
-        
+    for c in all_centers:
+        # 3A
+        n3a = num_3a.get(c, 0)
+        d3a = den_3a.get(c, 0)
+        c3a = (n3a/d3a*100) if d3a > 0 else 0
         reporte.append({
-            'Centro': code, 'Meta_ID': 'Meta 3A', 'Indicador': 'Odontológico CERO',
-            'Numerador': num_3a, 'Denominador': den_3a, 'Cumplimiento': cump_3a,
-            'Meta_Fijada': 48.0, 'Meta_Nacional': 48.0
+            'Centro': c, 'Meta_ID': 'Meta 3A', 'Indicador': 'CERO (0-9)',
+            'Numerador': n3a, 'Denominador': d3a, 'Cumplimiento': c3a,
+            'Meta_Fijada': 0.0, 'Meta_Nacional': 0.0 # TBD
         })
         
-        # 3B Report
-        den_3b = den['3B']
-        num_3b = num['3B']
-        cump_3b = (num_3b / den_3b * 100) if den_3b > 0 else 0
-        
+        # 3B
+        n3b = num_3b.get(c, 0)
+        d3b = den_3b.get(c, 0)
+        c3b = (n3b/d3b*100) if d3b > 0 else 0
         reporte.append({
-            'Centro': code, 'Meta_ID': 'Meta 3B', 'Indicador': 'Caries 6 años',
-            'Numerador': num_3b, 'Denominador': den_3b, 'Cumplimiento': cump_3b,
-            'Meta_Fijada': 21.0, 'Meta_Nacional': 22.0
+            'Centro': c, 'Meta_ID': 'Meta 3B', 'Indicador': 'Libre Caries (6)',
+            'Numerador': n3b, 'Denominador': d3b, 'Cumplimiento': c3b,
+            'Meta_Fijada': 21.0, 'Meta_Nacional': 21.0
         })
-    
-    # Output
+        
     output_path = normalize_path(r"DATOS\reporte_meta_3_preliminar.csv")
     try:
         with open(output_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=['Centro', 'Meta_ID', 'Indicador', 'Numerador', 'Denominador', 'Cumplimiento', 'Meta_Fijada', 'Meta_Nacional'])
             writer.writeheader()
             for r in reporte:
-                writer.writerow({
-                    'Centro': r['Centro'],
-                    'Meta_ID': r['Meta_ID'],
-                    'Indicador': r['Indicador'],
-                    'Numerador': r['Numerador'],
-                    'Denominador': r['Denominador'],
-                    'Cumplimiento': r['Cumplimiento'],
-                    'Meta_Fijada': r['Meta_Fijada'],
-                    'Meta_Nacional': r['Meta_Nacional']
-                })
+                writer.writerow(r)
         print(f"Reporte guardado en {output_path}")
-    except:
-        pass
+    except: pass
 
 if __name__ == "__main__":
     calcular_meta_3()

@@ -11,20 +11,20 @@ sys.path.append(os.path.join(project_root, 'SRC'))
 
 from modules.dataloaders import scan_rem_files, load_piv_data
 from modules.utils import normalize_path
+from config import DIR_SERIE_P_ACTUAL, PIV_FILE
 
 def calcular_meta_4():
     print("=== Calculando Meta 4: Diabetes Mellitus Tipo 2 (DM2) ===")
     
     # Configuración
-    DATA_DIR = r"DATOS\ENTRADA\SERIE_P"
-    PIV_FILE = r"DATOS\PIV\PIV_MASTER_GOLD_2025_09_ACEPTADOS.parquet"
+    DATA_DIR = DIR_SERIE_P_ACTUAL
     
     # 4A: Cobertura Efectiva
     # Num: REM P04, Sección B. C36 + C37 (Compensados)
     # Den: Personas 15+ con DM2 Estimadas (Prev 12.3%)
     PREVALENCIA_DM2 = 0.123 
     
-    SHEET = "P04"
+    SHEET = "P4"
     CELLS_4A_NUM = ["C36", "C37"]
     
     # 4B: Pie Diabético
@@ -82,26 +82,57 @@ def calcular_meta_4():
                 sheet = wb[SHEET]
                 
                 # 4A Num (Compensados)
-                for cell in CELLS_4A_NUM:
-                    val = sheet[cell].value
-                    if val and isinstance(val, (int, float)):
-                        numeradores_4a[real_code] += val
-                        
+                # Search for rows containing "HbA1C"
+                # Logic: C36 + C37 in user request -> Corresponds to <7% and <8%
+                # Dump showed them at Rows 30 and 31.
+                
+                rows_4a = []
+                for row in sheet.iter_rows(min_row=1, max_row=100, values_only=True):
+                    row_str = " ".join([str(c) for c in row[:5] if c])
+                    if "HbA1C<7%" in row_str or "HbA1C<8%" in row_str:
+                        # Value is usually in Column C (Index 2)
+                        # Check if it has a value
+                        if len(row) > 2 and isinstance(row[2], (int, float)):
+                            numeradores_4a[real_code] += row[2]
+
                 # 4B Num (Pie Vigente)
-                for cell in CELLS_4B_NUM:
-                    val = sheet[cell].value
-                    if val and isinstance(val, (int, float)):
-                        numeradores_4b[real_code] += val
-                        
+                # C61+C62+C63+C64 in user request.
+                # Need to find "evaluación vigente del pie"
+                # Dump Row 61: "Con evaluación vigente del pie..." -> Riesgo bajo
+                # Row 62: Riesgo moderado
+                # Row 63: Riesgo alto
+                # Row 64: Riesgo máximo
+                # So we sum the 4 rows starting from "evaluación vigente del pie"
+                
+                found_pie = False
+                pie_rows_count = 0
+                for row in sheet.iter_rows(min_row=1, max_row=100, values_only=True):
+                    row_str = " ".join([str(c) for c in row[:5] if c])
+                    if "evaluación vigente del pie" in row_str:
+                         found_pie = True
+                    
+                    if found_pie and pie_rows_count < 4:
+                         if len(row) > 2 and isinstance(row[2], (int, float)):
+                             numeradores_4b[real_code] += row[2]
+                         pie_rows_count += 1
+                         
                 # 4B Den (Bajo Control)
-                for cell in CELLS_4B_DEN:
-                    val = sheet[cell].value
-                    if val and isinstance(val, (int, float)):
-                        denominadores_4b[real_code] += val
-                        
+                # C17 from user.
+                # Dump Row 17: "Diabetes Mellitus tipo 2" in Section A (Row 17)
+                # Value at Col C (Index 2): 1300.
+                # Dynamic search: "Diabetes Mellitus tipo 2" in Section A.
+                # Section A starts around Row 8.
+                for row in sheet.iter_rows(min_row=10, max_row=25, values_only=True): # Narrow range for Sec A
+                    row_str = " ".join([str(c) for c in row[:5] if c])
+                    if "Diabetes Mellitus tipo 2" in row_str:
+                         if len(row) > 2 and isinstance(row[2], (int, float)):
+                             denominadores_4b[real_code] += row[2]
+                             break # Only one row in Section A
+            
             wb.close()
         except:
             pass
+
             
     # Reporte
     all_centers = set(denominadores_4a.keys()) | set(numeradores_4a.keys())

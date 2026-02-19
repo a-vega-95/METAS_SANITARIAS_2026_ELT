@@ -11,13 +11,13 @@ sys.path.append(os.path.join(project_root, 'SRC'))
 
 from modules.dataloaders import scan_rem_files, load_piv_data
 from modules.utils import normalize_path
+from config import DIR_SERIE_P_ACTUAL, PIV_FILE
 
 def calcular_meta_2():
     print("=== Calculando Meta 2: Papanicolaou (PAP) o Test VPH ===")
     
     # 1. Configuración
-    DATA_DIR = r"DATOS\ENTRADA\SERIE_P"
-    PIV_FILE = r"DATOS\PIV\PIV_MASTER_GOLD_2025_09_ACEPTADOS.parquet"
+    DATA_DIR = DIR_SERIE_P_ACTUAL
     
     # Lógica Meta 2:
     SHEET_P12 = "P12"
@@ -107,9 +107,13 @@ def calcular_meta_2():
         
         reporte.append({
             'Centro': code,
+            'Meta_ID': 'Meta 2',
+            'Indicador': 'PAP/VPH',
             'Numerador': num,
             'Denominador': den,
-            'Cumplimiento': cumplimiento
+            'Cumplimiento': cumplimiento,
+            'Meta_Fijada': 63.0,
+            'Meta_Nacional': 80.0
         })
 
     cumplimiento_global = (total_num / total_den * 100) if total_den > 0 else 0
@@ -124,7 +128,7 @@ def calcular_meta_2():
     output_path = normalize_path(r"DATOS\reporte_meta_2_preliminar.csv")
     try:
         with open(output_path, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=['Centro', 'Numerador', 'Denominador', 'Cumplimiento'])
+            writer = csv.DictWriter(f, fieldnames=['Centro', 'Meta_ID', 'Indicador', 'Numerador', 'Denominador', 'Cumplimiento', 'Meta_Fijada', 'Meta_Nacional'])
             writer.writeheader()
             writer.writerows(reporte)
         print(f"Reporte guardado en {output_path}")

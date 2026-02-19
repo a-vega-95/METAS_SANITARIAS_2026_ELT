@@ -1,0 +1,43 @@
+1. Recuperación del Desarrollo Psicomotor (DSM)
+• Serie REM: REM A03, Sección A.2 (Resultados de la aplicación de Escala de Evaluación del Desarrollo Psicomotor).
+• Celdas:
+    ◦ Numerador: Celdas de "Reevaluación" (Normal desde riesgo + Normal con rezago desde riesgo) en las columnas de 12 a 23 meses (ej. J26+K26+L26+M26).
+    ◦ Denominador: Celdas de "Primera Evaluación" con "Riesgo" en las columnas de 12 a 23 meses (ej. J23+K23+L23+M23).
+• Fórmula: Numerador (N° de niños de 12 a 23 meses con DSM recuperados de enero a diciembre 2026) / Denominador (N° de niños de 12 a 23 meses en primera evaluación con riesgo de octubre 2025 a septiembre 2026) x 100.
+2. Detección Precoz del Cáncer de Cuello Uterino
+• Serie REM: REM P12, Sección A. (El denominador no usa REM, usa la Población Inscrita Validada por FONASA).
+• Celdas: B11+B12+B13+B14+B15+B16+B17+B18 + C11+C12+C13+C14+C15+C16+C17+C18.
+• Fórmula: Numerador (N° de personas de 25 a 64 años inscritas validadas con PAP o Test de VPH vigente a diciembre 2026) / Denominador (N° de personas de 25 a 64 años inscritas validadas por FONASA para el año 2026) x 100.
+3. Salud Bucal en Población Infantil
+Esta meta se divide en dos sub-indicadores:
+3.A Control con enfoque de riesgo odontológico (CERO)
+• Serie REM: REM A03, Sección D.7 (Aplicación y Resultados de Pauta CERO).
+• Fórmula: Numerador (N° de niños y niñas de 0 a 9 años con pauta CERO aplicada de enero a diciembre 2026) / Denominador (N° de niños y niñas inscritos validados de 0 a 9 años para el año 2026) x 100.
+3.B Niños y niñas de 6 años libres de caries
+• Serie REM: REM A09, Sección C (Ingresos y Egresos en APS).
+• Celdas: S48 + T48 (Columnas 16 y 17).
+• Fórmula: Numerador (N° de niños y niñas de 6 años con ceod igual a 0 de enero a diciembre 2026) / Denominador (N° de niños y niñas inscritos validados de 6 años para el año 2026) x 100.
+4. Diabetes Mellitus Tipo 2 (DM2)
+Se divide en dos metas específicas:
+4.A Cobertura Efectiva de DM2
+• Serie REM: REM P04, Sección B (Metas de Compensación).
+• Celdas: C36 + C37.
+• Fórmula: Numerador (N° personas de 15 a 79 años con HbA1c <7% + N° personas de 80 y más años con HbA1c <8% a diciembre 2026) / Denominador (N° de personas de 15 años y más estimadas con DM2 según prevalencia 2026) x 100.
+4.B Evaluación Anual del Pie Diabético
+• Serie REM: REM P04. Numerador en Sección C (Variables de seguimiento del PSCV) y Denominador en Sección A (Programa Salud Cardiovascular).
+• Celdas: Numerador: C61+C62+C63+C64. Denominador: C17.
+• Fórmula: Numerador (N° de personas de 15 años y más con DM2 bajo control con evaluación de pie vigente a diciembre 2026) / Denominador (N° de personas de 15 años y más con DM2 bajo control a diciembre 2026) x 100.
+5. Cobertura de Tratamiento en Personas con Hipertensión Arterial (HTA)
+• Serie REM: REM P04, Sección B (Metas de Compensación).
+• Celdas: C34 + C35.
+• Fórmula: Numerador (N° personas HTA 15 a 79 años con PA <140/90 + N° personas HTA 80 y más años con PA <150/90 a diciembre 2026) / Denominador (N° de personas de 15 y más años con HTA estimadas según prevalencia 2026) x 100.
+6. Lactancia Materna Exclusiva (LME) al Sexto Mes de Vida
+• Serie REM: REM A03, Sección A.5 (Lactancia en niños y niñas controlados).
+• Celdas: H61 (Columna 06) para el numerador.
+• Fórmula: Numerador (N° de niños y niñas controlados al sexto mes que recibieron LME de enero a diciembre 2026) / Denominador (N° total de niños y niñas con control de salud del sexto mes de enero a diciembre 2026) x 100.
+7. Cobertura de Tratamiento en Enfermedades Respiratorias (Asma y EPOC)
+• Serie REM: REM P04, Sección correspondiente a Nivel de Control de Población Respiratoria Crónica.
+• Fórmula: Numerador (N° de personas con EPOC de 40 y más años con control "adecuado" + N° de personas con asma de 5 y más años con nivel "controlado" de enero a diciembre 2026) / Denominador (N° de personas con EPOC de 40 y más años + N° de personas con asma de 5 y más años estimadas según prevalencia 2026) x 100.
+8. Plan de Trabajo en Salud Comunitaria
+• Acreditación mediante Informe: Esta meta es dicotómica y se evalúa mediante un informe remitido por el Servicio de Salud, no se extrae directamente desde celdas REM.
+• Fórmula: Numerador (Plan de Salud Comunitaria elaborado, ejecutado y evaluado participativamente) / Denominador (100% de las comunas/establecimientos comprometidos) x 100.

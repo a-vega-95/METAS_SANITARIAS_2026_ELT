@@ -15,15 +15,21 @@ with open("debug_structure.txt", "w", encoding="utf-8") as f:
                 line = f"Row {i}: {row}\n"
                 f.write(line)
     
-    # P4
+    # P3
     if os.path.exists(P_FILE):
         wb = openpyxl.load_workbook(P_FILE, read_only=True, data_only=True)
-        sheet = "P4" if "P4" in wb.sheetnames else None
+        sheet = "P3" if "P3" in wb.sheetnames else None
         if sheet:
             ws = wb[sheet]
-            f.write("\n=== P4 ===\n")
-            for i, row in enumerate(ws.iter_rows(min_row=1, max_row=300, values_only=True), 1):
+            f.write("\n=== P3 ===\n")
+            for i, row in enumerate(ws.iter_rows(min_row=1, max_row=20, values_only=True), 1):
                 clean_row = [str(c) for c in row if c is not None]
                 if clean_row:
-                    line = f"Row {i}: {clean_row[:5]}\n" # Just first 5 cols usually have labels
+                    line = f"Row {i}: {clean_row}\n"
                     f.write(line)
+            # Also dump the data rows found earlier to verify context
+            f.write("\n--- P3 DATA ROWS ---\n")
+            for i, row in enumerate(ws.iter_rows(min_row=60, max_row=80, values_only=True), 60):
+                clean_row = [str(c) for c in row if c is not None]
+                if "Asma" in str(clean_row) or "EPOC" in str(clean_row):
+                     f.write(f"Row {i}: {clean_row}\n")

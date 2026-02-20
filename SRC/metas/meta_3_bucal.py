@@ -53,69 +53,66 @@ def calcular_meta_3():
         return
 
     mapping_a = scan_rem_files(DATA_DIR_A)
+    print(f"Archivos REM A para meta 3: {[f['filename'] for f in mapping_a]}")
 
-    # 1. Denominadores (PIV)
-    den_3a = {} # 0-9 años
-    den_3b = {} # 6 años
-    
-    for row in piv_data:
-        centro = row.get('COD_CENTRO', '')
-        edad = row.get('EDAD_EN_FECHA_CORTE')
-        # Handle None
-        if edad is None: edad = -1
-        
-        estado = row.get('ACEPTADO_RECHAZADO', '')
-        
-        if estado == 'ACEPTADO':
-            if centro not in den_3a:
-                den_3a[centro] = 0
-                den_3b[centro] = 0
-                
-            # Meta 3A: 0 a 9 años
-            if 0 <= edad <= 9:
-                den_3a[centro] += 1
-                
-            # Meta 3B: 6 años
-            if edad == 6:
-                den_3b[centro] += 1
-                
-    # 2. Numeradores (REM)
-    num_3a = {}
-    num_3b = {}
-    
     for entry in mapping_a:
         code = entry['code']
-        # Normalize code
         real_code = code
         if code[-1].isalpha() and code[:-1].isdigit():
-             real_code = code[:-1]
-             
+             real_code = code[:-1}
         file_path = entry['path']
         year = entry['year']
-        
-        # Filtro Año: Numerador 2026
+        print(f"Procesando REM A: {file_path} (Centro: {real_code})")
         if year != 2026: continue
-            
         if real_code not in num_3a:
             num_3a[real_code] = 0
             num_3b[real_code] = 0
-            
-        if not os.path.exists(file_path): continue
-        
+        if not os.path.exists(file_path):
+            print(f"Archivo no existe: {file_path}")
+            continue
         try:
-             wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
-             
-             # Meta 3A (A03)
-             if SHEET_3A in wb.sheetnames:
-                 ws = wb[SHEET_3A]
-                 # Find Section D.7 / Pauta CERO
-                 target_row = None
-                 found_section = False
-                 for i, row in enumerate(ws.iter_rows(min_row=1, max_row=300, values_only=True), 1):
-                     content = " ".join([str(c) for c in row[:5] if c])
-                     if "PAUTA CERO" in content:
-                         found_section = True
-                         continue # Look for TOTAL in next rows
+            wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
+            # Meta 3A (A03)
+            if SHEET_3A in wb.sheetnames:
+                ws = wb[SHEET_3A]
+                target_row = None
+                found_section = False
+                for i, row in enumerate(ws.iter_rows(min_row=1, max_row=300, values_only=True), 1):
+                    content = " ".join([str(c) for c in row[:5] if c])
+                    if "PAUTA CERO" in content:
+                        found_section = True
+                        continue
+                    if found_section and "TOTAL" in content:
+                        target_row = row
+                        break
+                if target_row:
+                    val_3a = 0
+                    for idx in COLS_IDX_3A:
+                        if idx < len(target_row):
+                            v = target_row[idx]
+                            print(f"Meta 3A columna {idx}: {v}")
+                            if v and isinstance(v, (int, float)):
+                                val_3a += v
+                    num_3a[real_code] += val_3a
+                else:
+                    print(f"No se encontró fila TOTAL en sección PAUTA CERO en {file_path}")
+            else:
+                print(f"Hoja {SHEET_3A} no encontrada en {file_path}")
+            # Meta 3B (A09)
+            if SHEET_3B in wb.sheetnames:
+                ws = wb[SHEET_3B]
+                val_3b = 0
+                for cell in CELLS_3B:
+                    v = ws[cell].value
+                    print(f"Meta 3B celda {cell}: {v}")
+                    if v and isinstance(v, (int, float)):
+                        val_3b += v
+                num_3b[real_code] += val_3b
+            else:
+                print(f"Hoja {SHEET_3B} no encontrada en {file_path}")
+            wb.close()
+        except Exception as e:
+            print(f"Error procesando {file_path}: {e}")
                      
                      if found_section and "TOTAL" in content:
                          target_row = row

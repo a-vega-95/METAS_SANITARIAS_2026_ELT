@@ -51,6 +51,7 @@ def calcular_meta_2():
 
     mapping = scan_rem_files(DATA_DIR)
     print(f"Cargados {len(mapping)} archivos REM P y {len(piv_data)} registros PIV.")
+    print(f"Archivos REM P para numerador: {[f['filename'] for f in mapping]}")
 
     # 3. Procesar Denominadores (PIV)
     denominadores = {} # {cod_centro: count}
@@ -82,31 +83,29 @@ def calcular_meta_2():
         real_code = raw_code
         if raw_code[-1].isalpha() and raw_code[:-1].isdigit():
              real_code = raw_code[:-1]
-             
         file_path = entry['path']
-        
+        print(f"Procesando REM P: {file_path} (Centro: {real_code})")
         if real_code not in numeradores:
             numeradores[real_code] = 0
-            
         if not os.path.exists(file_path):
+            print(f"Archivo no existe: {file_path}")
             continue
-            
         try:
-             wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
-             
-             if SHEET_P12 in wb.sheetnames:
-                 sheet = wb[SHEET_P12]
-                 
-                 for col in COLS_REM:
-                     for row_idx in ROWS_REM:
-                         cell = f"{col}{row_idx}"
-                         val = sheet[cell].value
-                         if val and isinstance(val, (int, float)):
-                             numeradores[real_code] += val
-                             
-             wb.close()
+            wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
+            if SHEET_P12 in wb.sheetnames:
+                sheet = wb[SHEET_P12]
+                for col in COLS_REM:
+                    for row_idx in ROWS_REM:
+                        cell = f"{col}{row_idx}"
+                        val = sheet[cell].value
+                        print(f"Numerador {cell}: {val}")
+                        if val and isinstance(val, (int, float)):
+                            numeradores[real_code] += val
+            else:
+                print(f"Hoja {SHEET_P12} no encontrada en {file_path}")
+            wb.close()
         except Exception as e:
-             print(f"Error procesando {raw_code}: {e}")
+            print(f"Error procesando {raw_code}: {e}")
 
     # 5. Generar Reporte
     all_centers = set(denominadores.keys()) | set(numeradores.keys())

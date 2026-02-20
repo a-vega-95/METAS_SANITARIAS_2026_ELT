@@ -17,11 +17,12 @@ def calcular_meta_1():
     
     # 1. Configuración
     TARGET_SHEET = "A03"
-    
-    # Coordenadas según LOGICA_NEGOCIO.txt
+    # Columnas de 12 a 23 meses
     COLS = ['J', 'K', 'L', 'M']
-    ROW_NUM = 26
-    ROW_DEN = 23
+    # Filas para denominador (Primera Evaluación - Riesgo)
+    ROWS_DEN = [23]
+    # Filas para numerador (Reevaluación: Normal y Normal con rezago)
+    ROWS_NUM = [26, 28]
     
     # 2. Cargar todos los REM Serie A disponibles (actual y anterior)
     mapping_actual = scan_rem_files(DIR_SERIE_A_ACTUAL)
@@ -35,6 +36,8 @@ def calcular_meta_1():
         (entry['year'] == AGNO_ANTERIOR and entry['month'] >= 10) or
         (entry['year'] == AGNO_ACTUAL and entry['month'] <= 9)
     )]
+    print(f"Archivos para numerador: {[f['filename'] for f in numerador_files]}")
+    print(f"Archivos para denominador: {[f['filename'] for f in denominador_files]}")
 
     # Estructura para acumular por centro
     centros = {}
@@ -43,19 +46,25 @@ def calcular_meta_1():
     for entry in numerador_files:
         code = entry['code']
         file_path = entry['path']
+        print(f"Procesando numerador: {file_path} (Centro: {code})")
         if code not in centros:
             centros[code] = {'num': 0, 'den': 0}
         if not os.path.exists(file_path):
+            print(f"Archivo no existe: {file_path}")
             continue
         try:
             wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
             if TARGET_SHEET in wb.sheetnames:
                 sheet = wb[TARGET_SHEET]
                 for col in COLS:
-                    cell = f"{col}{ROW_NUM}"
-                    val = sheet[cell].value
-                    if val and isinstance(val, (int, float)):
-                        centros[code]['num'] += val
+                    for row in ROWS_NUM:
+                        cell = f"{col}{row}"
+                        val = sheet[cell].value
+                        print(f"Numerador {cell}: {val}")
+                        if val and isinstance(val, (int, float)):
+                            centros[code]['num'] += val
+            else:
+                print(f"Hoja {TARGET_SHEET} no encontrada en {file_path}")
             wb.close()
         except Exception as e:
             print(f"Error procesando numerador {entry['filename']}: {e}")
@@ -64,19 +73,25 @@ def calcular_meta_1():
     for entry in denominador_files:
         code = entry['code']
         file_path = entry['path']
+        print(f"Procesando denominador: {file_path} (Centro: {code})")
         if code not in centros:
             centros[code] = {'num': 0, 'den': 0}
         if not os.path.exists(file_path):
+            print(f"Archivo no existe: {file_path}")
             continue
         try:
             wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
             if TARGET_SHEET in wb.sheetnames:
                 sheet = wb[TARGET_SHEET]
                 for col in COLS:
-                    cell = f"{col}{ROW_DEN}"
-                    val = sheet[cell].value
-                    if val and isinstance(val, (int, float)):
-                        centros[code]['den'] += val
+                    for row in ROWS_DEN:
+                        cell = f"{col}{row}"
+                        val = sheet[cell].value
+                        print(f"Denominador {cell}: {val}")
+                        if val and isinstance(val, (int, float)):
+                            centros[code]['den'] += val
+            else:
+                print(f"Hoja {TARGET_SHEET} no encontrada en {file_path}")
             wb.close()
         except Exception as e:
             print(f"Error procesando denominador {entry['filename']}: {e}")

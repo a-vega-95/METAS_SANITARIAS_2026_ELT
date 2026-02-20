@@ -59,7 +59,7 @@ def calcular_meta_3():
         code = entry['code']
         real_code = code
         if code[-1].isalpha() and code[:-1].isdigit():
-             real_code = code[:-1}
+            real_code = code[:-1]
         file_path = entry['path']
         year = entry['year']
         print(f"Procesando REM A: {file_path} (Centro: {real_code})")

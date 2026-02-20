@@ -19,7 +19,11 @@ PREVALENCIA_ASMA = 0.10  # 10.0%
 PREVALENCIA_EPOC = 0.117 # 11.7%
 
 # Rutas Base
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if os.environ.get("METAS_BASE_DIR"):
+    BASE_DIR = os.environ["METAS_BASE_DIR"]
+else:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
 DATOS_DIR = os.path.join(BASE_DIR, "DATOS")
 ENTRADA_DIR = os.path.join(DATOS_DIR, "ENTRADA")
 
@@ -34,4 +38,4 @@ DIR_SERIE_A_ANTERIOR = os.path.join(DIR_REM_ANTERIOR, "SERIE_A")
 DIR_SERIE_P_ACTUAL = os.path.join(DIR_REM_ACTUAL, "SERIE_P")
 DIR_SERIE_P_ANTERIOR = os.path.join(DIR_REM_ANTERIOR, "SERIE_P")
 
-PIV_FILE = os.path.join(DATOS_DIR, "PIV", "PIV_MASTER_GOLD_2025_09_ACEPTADOS.parquet")
+PIV_FILE = os.path.join(DATOS_DIR, "PIV", "PIV_2024_09_DSM_SI_ACEPTADOS.parquet")

@@ -28,12 +28,31 @@ def calcular_meta_3():
     SHEET_3B = "A09"
     CELLS_3B = ["S48", "T48"]
     
-    try:
-        mapping_a = scan_rem_files(DATA_DIR_A)
-        piv_data = load_piv_data(PIV_FILE)
-    except Exception as e:
-        print(f"Error cargando datos: {e}")
+    # Buscar archivo PIV más reciente
+    piv_dir = normalize_path("DATOS/PIV")
+    piv_files = [f for f in os.listdir(piv_dir) if f.startswith("PIV_") and f.endswith(".parquet")]
+    if not piv_files:
+        print(f"ERROR: No se encontró ningún archivo PIV válido en: {piv_dir}")
         return
+    piv_files.sort(reverse=True)
+    piv_file = os.path.join(piv_dir, piv_files[0])
+    print(f"Usando archivo PIV: {piv_file}")
+
+    # Validar encabezados del parquet
+    import pyarrow.parquet as pq
+    try:
+        table = pq.read_table(piv_file)
+        expected_cols = {'COD_CENTRO', 'EDAD_EN_FECHA_CORTE', 'ACEPTADO_RECHAZADO', 'GENERO', 'GENERO_NORMALIZADO'}
+        parquet_cols = set(table.schema.names)
+        if not expected_cols.issubset(parquet_cols):
+            print(f"ERROR: El archivo PIV no es compatible por encabezados. Esperado: {expected_cols}, encontrado: {parquet_cols}")
+            return
+        piv_data = table.to_pylist()
+    except Exception as e:
+        print(f"ERROR al leer el archivo PIV: {e}")
+        return
+
+    mapping_a = scan_rem_files(DATA_DIR_A)
 
     # 1. Denominadores (PIV)
     den_3a = {} # 0-9 años

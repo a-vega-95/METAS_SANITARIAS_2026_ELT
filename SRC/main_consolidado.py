@@ -10,29 +10,25 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
 sys.path.append(os.path.join(project_root, 'SRC'))
 
-from modules.utils import normalize_path
+from modules.utils import normalize_path, load_center_names
 
-def load_center_names():
-    """Carga los nombres de los centros desde DOC/COD_CENTROS_SALUD.CSV"""
-    mapping_names = {}
-    csv_path = normalize_path("DOC/COD_CENTROS_SALUD.CSV")
-    
-    if os.path.exists(csv_path):
-        try:
-            with open(csv_path, 'r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    code = row['COD_CENTRO'].strip()
-                    name = row['NOMBRE'].strip()
-                    mapping_names[code] = name
-                    if code[-1].isalpha():
-                        mapping_names[code[:-1]] = name
-        except Exception as e:
-            print(f"Error cargando nombres de centros: {e}")
-    return mapping_names
+from config import DATOS_DIR
 
 def run_meta_scripts():
     """Ejecuta todos los scripts de cálculo de metas"""
+    
+    # Buscar archivo PIV más reciente y válido
+    piv_dir = os.path.join(DATOS_DIR, "PIV")
+    piv_files = [f for f in os.listdir(piv_dir) if f.startswith("PIV_") and f.endswith(".parquet")]
+    if not piv_files:
+        sys.exit(f"ERROR CRITICO: No se encontró ningún archivo PIV válido en: {piv_dir}. La ejecución no puede continuar.")
+    # Selecciona el archivo más reciente por nombre
+    piv_files.sort(reverse=True)
+    piv_file = os.path.join(piv_dir, piv_files[0])
+    print(f"Usando archivo PIV: {piv_file}")
+    if not os.path.exists(piv_file):
+        sys.exit(f"ERROR CRITICO: No se encontró el archivo PIV seleccionado en: {piv_file}. La ejecución no puede continuar.")
+        
     scripts = [
         "SRC/metas/meta_1_dsm.py",
         "SRC/metas/meta_2_pap.py",
@@ -48,12 +44,14 @@ def run_meta_scripts():
         script_path = normalize_path(script)
         if os.path.exists(script_path):
             print(f"Ejecutando {script}...")
-            try:
-                subprocess.run([sys.executable, script_path], check=True)
-            except subprocess.CalledProcessError as e:
-                print(f"Error ejecutando {script}: {e}")
+            # Remove try/except to allow failure to stop execution as requested
+            # "SI FALTA ALGUNO ESTE SE DETIENE"
+            subprocess.run([sys.executable, script_path], check=True)
         else:
             print(f"Script no encontrado: {script_path}")
+            # If a script is missing, should we stop too? Probably yes.
+            sys.exit(f"Error Fatal: Script no encontrado {script_path}")
+            
     print("=== Ejecución Finalizada ===")
 
 def consolidar_reportes():
@@ -67,22 +65,18 @@ def consolidar_reportes():
     output_dir = normalize_path("DATOS/RENDIMIENTO")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-        
-    # Archivos a procesar
-    files = [
-        r"DATOS\reporte_meta_1_preliminar.csv",
-        r"DATOS\reporte_meta_2_preliminar.csv",
-        r"DATOS\reporte_meta_3_preliminar.csv",
-        r"DATOS\reporte_meta_4a_preliminar.csv", # Includes 4A and 4B
-        r"DATOS\reporte_meta_5_preliminar.csv",
-        r"DATOS\reporte_meta_6_preliminar.csv",
-        r"DATOS\reporte_meta_7_preliminar.csv"
-    ]
-    
+
+    # Buscar archivos de reporte preliminar de metas
+    report_dir = normalize_path("DATOS")
+    report_files = [f for f in os.listdir(report_dir) if f.startswith("reporte_meta_") and f.endswith("_preliminar.csv")]
+    if not report_files:
+        print("No se encontraron archivos de reporte preliminar de metas.")
+        return
+
     consolidado = []
-    
-    for relative_path in files:
-        csv_path = normalize_path(relative_path)
+
+    for filename in report_files:
+        csv_path = os.path.join(report_dir, filename)
         if os.path.exists(csv_path):
             try:
                 with open(csv_path, 'r', encoding='utf-8') as f:

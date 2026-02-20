@@ -22,11 +22,7 @@ def calcular_meta_6():
     ROW_NUM = 61 # LME al 6to mes
     ROWS_DEN = [61, 62, 63] # LME + Fórmula + Mixta
     
-    try:
-        mapping = scan_rem_files(DIR_SERIE_A_ACTUAL)
-    except Exception as e:
-        print(e)
-        return
+    mapping = scan_rem_files(DIR_SERIE_A_ACTUAL)
 
     numeradores = {}
     denominadores = {}

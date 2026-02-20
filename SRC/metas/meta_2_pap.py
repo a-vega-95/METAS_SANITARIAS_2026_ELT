@@ -25,13 +25,32 @@ def calcular_meta_2():
     ROWS_REM = range(11, 19) # 11 to 18 inclusive
     
     # 2. Cargar Datos
-    try:
-        mapping = scan_rem_files(DATA_DIR)
-        piv_data = load_piv_data(PIV_FILE)
-        print(f"Cargados {len(mapping)} archivos REM P y {len(piv_data)} registros PIV.")
-    except Exception as e:
-        print(f"Error fatal cargando datos: {e}")
+    # 2. Buscar archivo PIV más reciente
+    piv_dir = normalize_path("DATOS/PIV")
+    piv_files = [f for f in os.listdir(piv_dir) if f.startswith("PIV_") and f.endswith(".parquet")]
+    if not piv_files:
+        print(f"ERROR: No se encontró ningún archivo PIV válido en: {piv_dir}")
         return
+    piv_files.sort(reverse=True)
+    piv_file = os.path.join(piv_dir, piv_files[0])
+    print(f"Usando archivo PIV: {piv_file}")
+
+    # Validar encabezados del parquet
+    import pyarrow.parquet as pq
+    try:
+        table = pq.read_table(piv_file)
+        expected_cols = {'COD_CENTRO', 'EDAD_EN_FECHA_CORTE', 'ACEPTADO_RECHAZADO', 'GENERO', 'GENERO_NORMALIZADO'}
+        parquet_cols = set(table.schema.names)
+        if not expected_cols.issubset(parquet_cols):
+            print(f"ERROR: El archivo PIV no es compatible por encabezados. Esperado: {expected_cols}, encontrado: {parquet_cols}")
+            return
+        piv_data = table.to_pylist()
+    except Exception as e:
+        print(f"ERROR al leer el archivo PIV: {e}")
+        return
+
+    mapping = scan_rem_files(DATA_DIR)
+    print(f"Cargados {len(mapping)} archivos REM P y {len(piv_data)} registros PIV.")
 
     # 3. Procesar Denominadores (PIV)
     denominadores = {} # {cod_centro: count}

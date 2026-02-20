@@ -1,0 +1,61 @@
+
+=== Integration Test Final: Missing Case ===
+Result Code: 0
+STDOUT: === Calculando Meta 1: Recuperaci?n del Desarrollo Psicomotor ===
+[2026-02-19 20:27:17] [INFO] Iniciando escaneo de archivos en: C:\Users\Anghello\Downloads\METAS_SANITARIAS_2026_ELT-main\METAS_SANITARIAS_2026_ELT-main\SRC\tests\TEMP_INTEGRATION_TEST_FINAL\DATOS\ENTRADA\REM_ANO_ACTUAL\SERIE_A
+[2026-02-19 20:27:17] [INFO] Archivo validado y agregado: TEST01.xlsm -> Centro: CENTRO_TEST_1
+[2026-02-19 20:27:17] [INFO] Total de archivos validos encontrados: 1
+[2026-02-19 20:27:17] [CRITICAL] CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_2']
+Error fatal escaneando archivos: CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_2']
+=== Calculando Meta 2: Papanicolaou (PAP) o Test VPH ===
+[2026-02-19 20:27:17] [INFO] Iniciando escaneo de archivos en: C:\Users\Anghello\Downloads\METAS_SANITARIAS_2026_ELT-main\METAS_SANITARIAS_2026_ELT-main\SRC\tests\TEMP_INTEGRATION_TEST_FINAL\DATOS\ENTRADA\REM_ANO_ACTUAL\SERIE_P
+[2026-02-19 20:27:17] [INFO] Total de archivos validos encontrados: 0
+[2026-02-19 20:27:17] [CRITICAL] CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_2', 'CENTRO_TEST_1']
+Error fatal cargando datos: CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_2', 'CENTRO_TEST_1']
+=== Calculando Meta 3: Salud Bucal ===
+[2026-02-19 20:27:18] [INFO] Iniciando escaneo de archivos en: C:\Users\Anghello\Downloads\METAS_SANITARIAS_2026_ELT-main\METAS_SANITARIAS_2026_ELT-main\SRC\tests\TEMP_INTEGRATION_TEST_FINAL\DATOS\ENTRADA\REM_ANO_ACTUAL\SERIE_A
+[2026-02-19 20:27:18] [INFO] Archivo validado y agregado: TEST01.xlsm -> Centro: CENTRO_TEST_1
+[2026-02-19 20:27:18] [INFO] Total de archivos validos encontrados: 1
+[2026-02-19 20:27:18] [CRITICAL] CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_2']
+Error cargando datos: CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_2']
+=== Calculando Meta 4: Diabetes Mellitus Tipo 2 (DM2) ===
+[2026-02-19 20:27:18] [INFO] Iniciando escaneo de archivos en: C:\Users\Anghello\Downloads\METAS_SANITARIAS_2026_ELT-main\METAS_SANITARIAS_2026_ELT-main\SRC\tests\TEMP_INTEGRATION_TEST_FINAL\DATOS\ENTRADA\REM_ANO_ACTUAL\SERIE_P
+[2026-02-19 20:27:18] [INFO] Total de archivos validos encontrados: 0
+[2026-02-19 20:27:18] [CRITICAL] CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_1', 'CENTRO_TEST_2']
+CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_1', 'CENTRO_TEST_2']
+=== Calculando Meta 5: Hipertensi?n Arterial (HTA) ===
+[2026-02-19 20:27:18] [INFO] Iniciando escaneo de archivos en: C:\Users\Anghello\Downloads\METAS_SANITARIAS_2026_ELT-main\METAS_SANITARIAS_2026_ELT-main\SRC\tests\TEMP_INTEGRATION_TEST_FINAL\DATOS\ENTRADA\REM_ANO_ACTUAL\SERIE_P
+[2026-02-19 20:27:18] [INFO] Total de archivos validos encontrados: 0
+[2026-02-19 20:27:18] [CRITICAL] CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_2', 'CENTRO_TEST_1']
+CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_2', 'CENTRO_TEST_1']
+=== Calculando Meta 6: Lactancia Materna Exclusiva (LME) ===
+[2026-02-19 20:27:18] [INFO] Iniciando escaneo de archivos en: C:\Users\Anghello\Downloads\METAS_SANITARIAS_2026_ELT-main\METAS_SANITARIAS_2026_ELT-main\SRC\tests\TEMP_INTEGRATION_TEST_FINAL\DATOS\ENTRADA\REM_ANO_ACTUAL\SERIE_A
+[2026-02-19 20:27:18] [INFO] Archivo validado y agregado: TEST01.xlsm -> Centro: CENTRO_TEST_1
+[2026-02-19 20:27:18] [INFO] Total de archivos validos encontrados: 1
+[2026-02-19 20:27:18] [CRITICAL] CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_2']
+CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_2']
+=== Calculando Meta 7: Enfermedades Respiratorias (Asma/EPOC) ===
+[2026-02-19 20:27:19] [INFO] Iniciando escaneo de archivos en: C:\Users\Anghello\Downloads\METAS_SANITARIAS_2026_ELT-main\METAS_SANITARIAS_2026_ELT-main\SRC\tests\TEMP_INTEGRATION_TEST_FINAL\DATOS\ENTRADA\REM_ANO_ACTUAL\SERIE_P
+[2026-02-19 20:27:19] [INFO] Total de archivos validos encontrados: 0
+[2026-02-19 20:27:19] [CRITICAL] CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_1', 'CENTRO_TEST_2']
+CRITICO: Faltan archivos para los siguientes centros: ['CENTRO_TEST_1', 'CENTRO_TEST_2']
+=== Ejecutando Scripts de Metas ===
+Ejecutando SRC/metas/meta_1_dsm.py...
+Ejecutando SRC/metas/meta_2_pap.py...
+Ejecutando SRC/metas/meta_3_bucal.py...
+Ejecutando SRC/metas/meta_4_dm2.py...
+Ejecutando SRC/metas/meta_5_hta.py...
+Ejecutando SRC/metas/meta_6_lactancia.py...
+Ejecutando SRC/metas/meta_7_resp.py...
+=== Ejecuci?n Finalizada ===
+
+=== Generando Reporte Consolidado de Rendimiento ===
+No se generaron datos para el reporte.
+Archivo generado: C:\Users\Anghello\Downloads\METAS_SANITARIAS_2026_ELT-main\METAS_SANITARIAS_2026_ELT-main\SRC\tests\TEMP_INTEGRATION_TEST_FINAL\DATOS\RENDIMIENTO\Rendimiento_Metas_Sanitarias_2026-02-19.xlsx
+
+STDERR: 
+
+=== Integration Test Final: Success Case ===
+Result Code: 0
+Output Dir: C:\Users\Anghello\Downloads\METAS_SANITARIAS_2026_ELT-main\METAS_SANITARIAS_2026_ELT-main\SRC\tests\TEMP_INTEGRATION_TEST_FINAL\DATOS\RENDIMIENTO
+Files: ['Rendimiento_Metas_Sanitarias_2026-02-19.xlsx']

@@ -24,14 +24,11 @@ def calcular_meta_1():
     ROW_DEN = 23
     
     # 2. Cargar Mapeo (Escaneo de Archivos)
-    try:
-        mapping_actual = scan_rem_files(DIR_SERIE_A_ACTUAL)
-        mapping_anterior = scan_rem_files(DIR_SERIE_A_ANTERIOR)
-        mapping = mapping_actual + mapping_anterior
-        print(f"Se encontraron {len(mapping)} archivos REM en total.")
-    except Exception as e:
-        print(f"Error fatal escaneando archivos: {e}")
-        return
+    # 2. Cargar Mapeo (Escaneo de Archivos)
+    mapping_actual = scan_rem_files(DIR_SERIE_A_ACTUAL)
+    mapping_anterior = scan_rem_files(DIR_SERIE_A_ANTERIOR)
+    mapping = mapping_actual + mapping_anterior
+    print(f"Se encontraron {len(mapping)} archivos REM en total.")
 
     reporte = []
     

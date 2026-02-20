@@ -23,12 +23,63 @@ def calcular_meta_1():
     ROW_NUM = 26
     ROW_DEN = 23
     
-    # 2. Cargar Mapeo (Escaneo de Archivos)
-    # 2. Cargar Mapeo (Escaneo de Archivos)
+    # 2. Cargar todos los REM Serie A disponibles (actual y anterior)
     mapping_actual = scan_rem_files(DIR_SERIE_A_ACTUAL)
     mapping_anterior = scan_rem_files(DIR_SERIE_A_ANTERIOR)
     mapping = mapping_actual + mapping_anterior
     print(f"Se encontraron {len(mapping)} archivos REM en total.")
+
+    # 3. Filtrar archivos para numerador y denominador según lógica de negocio
+    numerador_files = [entry for entry in mapping if entry['year'] == AGNO_ACTUAL and 1 <= entry['month'] <= 12]
+    denominador_files = [entry for entry in mapping if (
+        (entry['year'] == AGNO_ANTERIOR and entry['month'] >= 10) or
+        (entry['year'] == AGNO_ACTUAL and entry['month'] <= 9)
+    )]
+
+    # Estructura para acumular por centro
+    centros = {}
+
+    # Procesar Numerador
+    for entry in numerador_files:
+        code = entry['code']
+        file_path = entry['path']
+        if code not in centros:
+            centros[code] = {'num': 0, 'den': 0}
+        if not os.path.exists(file_path):
+            continue
+        try:
+            wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
+            if TARGET_SHEET in wb.sheetnames:
+                sheet = wb[TARGET_SHEET]
+                for col in COLS:
+                    cell = f"{col}{ROW_NUM}"
+                    val = sheet[cell].value
+                    if val and isinstance(val, (int, float)):
+                        centros[code]['num'] += val
+            wb.close()
+        except Exception as e:
+            print(f"Error procesando numerador {entry['filename']}: {e}")
+
+    # Procesar Denominador
+    for entry in denominador_files:
+        code = entry['code']
+        file_path = entry['path']
+        if code not in centros:
+            centros[code] = {'num': 0, 'den': 0}
+        if not os.path.exists(file_path):
+            continue
+        try:
+            wb = openpyxl.load_workbook(file_path, data_only=True, read_only=True)
+            if TARGET_SHEET in wb.sheetnames:
+                sheet = wb[TARGET_SHEET]
+                for col in COLS:
+                    cell = f"{col}{ROW_DEN}"
+                    val = sheet[cell].value
+                    if val and isinstance(val, (int, float)):
+                        centros[code]['den'] += val
+            wb.close()
+        except Exception as e:
+            print(f"Error procesando denominador {entry['filename']}: {e}")
 
     reporte = []
     
